@@ -11,7 +11,8 @@ First, clone the repository to your local machine using the following command:
     git clone https://github.com/your-username/RentEase-Backend.git
     cd RentEase-Backend
 
-2. Install Dependencies Using pnpm
+2. Install Dependencies Using pnpm ![pnpm](https://img.shields.io/badge/package%20manager-pnpm-40c8e5.svg)
+
 
 This project uses pnpm as the package manager. If you don't have pnpm installed, follow these steps:
 Install pnpm (If not already installed)

@@ -7,9 +7,9 @@ Welcome to the RentEase-Backend repository! This project provides the backend se
 ### 1. Clone the Repository
 First, clone the repository to your local machine using the following command:
 
-    ```bash
-git clone https://github.com/your-username/RentEase-Backend.git
-cd RentEase-Backend
+    
+    git clone https://github.com/your-username/RentEase-Backend.git
+    cd RentEase-Backend
 
 2. Install Dependencies Using pnpm
 
@@ -18,43 +18,43 @@ Install pnpm (If not already installed)
 
 You can install pnpm globally via npm:
 
-npm install -g pnpm
+    npm install -g pnpm
 
 Or you can install it using Homebrew (on macOS):
 
-brew install pnpm
+    brew install pnpm
 
 Once pnpm is installed, run the following command to install the project dependencies:
 
-pnpm install
+    pnpm install
 
 This will install all the necessary packages specified in the package.json file.
 3. Set Up Environment Variables
 
 Ensure you have a .env file in the root of the project with the required environment variables. If one does not exist, you can create it by copying the example:
 
-cp .env.example .env
+    cp .env.example .env
 
 Make sure to adjust the variables in .env for your local environment (such as database connection details, API keys, etc.).
 4. Running the Application
 
 To start the application in development mode, use:
 
-pnpm dev
+    pnpm dev
 
 This will run the backend service in watch mode, so changes are reflected immediately.
 5. Running Tests
 
 To run tests, use the following command:
 
-pnpm test
+    pnpm test
 
 This will run the test suite and display the results in the terminal.
 6. Build the Application
 
 To build the application for production, use:
 
-pnpm build
+    pnpm build
 
 This will create an optimized build that can be deployed.
 Additional Notes

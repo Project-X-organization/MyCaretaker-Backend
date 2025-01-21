@@ -9,9 +9,7 @@ exports.createProperty = async (req, res) => {
       req.body;
 
     // user data from the body of the request if the user is authenticated
-    if (!req.user) {
-      userId = req.body.userId;
-    }
+    const userId = req.user.id;
 
     // upload images to cloudinary
     const images = [];

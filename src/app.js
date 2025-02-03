@@ -15,5 +15,12 @@ app.use(morgan("dev")); // logging middleware
 // Property routes
 app.use("/api/v1/properties", propertyRoutes);
 app.use("/api/v1/user", userRoutes);
+// app.use((error, req, res) => {
+//     console.error(error.statusCode)
+//   res.status(error.statusCode || 500).json({
+//     message: error.message,
+//     error: req.app.get("env") === "development" ? error : {},
+//   });
+// });
 
 module.exports = app;

@@ -3,6 +3,12 @@ const { encryptData } = require("../utils/bcrypt");
 const { generateOTP } = require("../utils/generateOtp");
 const { sendEmail } = require("../utils/nodemail");
 const jwt = require("jsonwebtoken");
+const {
+  applyForProperty,
+  getPropertyApplications,
+  allApplications,
+  acceptOrRejectApplication,
+} = require("../helpers/user.helper");
 exports.registerUser = async (req, res) => {
   const { username, email, password, phoneNumber } = req.body;
   try {
@@ -127,4 +133,95 @@ exports.socialLogin = async (req, res) => {
     token, // Client can store this for future requests
     user,
   });
+};
+
+exports.userProfile = async (req, res) => {
+  const { id } = req.user;
+  try {
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving user profile." });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await prisma.user.findMany();
+    if (!users) {
+      return res.status(404).json({ message: "No users found." });
+    }
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving users." });
+  }
+};
+
+exports.submitApplication = async (req, res) => {
+  try {
+    const { propertyId, userId } = req.body;
+    const application = await applyForProperty(propertyId, userId);
+    res.status(201).json({
+      message: "Application submitted successfully",
+      data: application,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ message: "Error submitting application", error: error.message });
+  }
+};
+
+exports.singlePropertyApplication = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const application = await getPropertyApplications(propertyId);
+    res.status(200).json({
+      message: "Application retrieved successfully",
+      data: application,
+    });
+  } catch (error) {
+    console.log(error)
+    res
+      .status(500)
+      .json({ message: "Error retrieving application", error: error.message });
+  }
+};
+
+exports.getAllApplications = async (req, res) => {
+  try {
+    const applications = await allApplications();
+    res.status(200).json({
+      message: "Applications retrieved successfully",
+      data: applications,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ message: "Error retrieving applications", error: error.message });
+  }
+};
+
+exports.updateApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId, status } = req.body;
+    const applcation = await acceptOrRejectApplication(applicationId, status);
+    res.status(200).json({
+      message: `Application status updated successfully`,
+      data: applcation,
+    });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({
+        message: "Error updating application status",
+        error: error.message,
+      });
+  }
 };

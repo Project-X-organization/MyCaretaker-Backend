@@ -14,40 +14,64 @@ datasource db {
 }
 
 model User {
-  id                     String        @id @default(auto()) @map("_id") @db.ObjectId
-  username               String
-  email                  String        @unique
-  phoneNumber            String        @unique
-  password               String
-  isLandord              Boolean       @default(false)
-  isTenant               Boolean       @default(true)
-  isAgent                Boolean       @default(false)
-  isVerified             Boolean       @default(false)
-  googleId               String?       @map("google_id")
-  verificationOtp        String?
-  verificationOtpExpires DateTime?
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
-  Property               Property[]
-  applcations            application[]
+  id                      String           @id @default(auto()) @map("_id") @db.ObjectId
+  username                String
+  email                   String           @unique
+  phoneNumber             String           @unique
+  password                String
+  isLandord               Boolean          @default(false)
+  isTenant                Boolean          @default(true)
+  isAgent                 Boolean          @default(false)
+  isVerified              Boolean          @default(false)
+  googleId                String?          @map("google_id")
+  verificationOtp         String?
+  verificationOtpExpires  DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  Property                Property[]
+  applcations             application[]
+  TenantLeaseAgreements   LeaseAgreement[] @relation("TenantLeaseAgreements")
+  LandlordLeaseAgreements LeaseAgreement[] @relation("LandlordLeaseAgreements") // Add the missing relation here
 }
 
 model Property {
-  id          String        @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  description String
-  price       Float
-  bedrooms    Int
-  bathrooms   Int
-  location    String
-  images      String[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  userId      String        @db.ObjectId
-  user        User          @relation(fields: [userId], references: [id])
-  applcations application[]
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  title          String
+  description    String
+  price          Float
+  bedrooms       Int
+  bathrooms      Int
+  location       String
+  images         String[]
+  applcations    application[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  userId         String           @db.ObjectId
+  user           User             @relation(fields: [userId], references: [id])
+  LeaseAgreement LeaseAgreement[]
+}
 
-  @@index([userId], name: "userId")
+model LeaseAgreement {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  terms       String
+  duration    Int
+  price       Float
+  propertyId  String    @db.ObjectId
+  property    Property  @relation(fields: [propertyId], references: [id])
+  tenantId    String    @db.ObjectId
+  tenant      User      @relation("TenantLeaseAgreements", fields: [tenantId], references: [id])
+  landlordId  String    @db.ObjectId
+  landlord    User      @relation("LandlordLeaseAgreements", fields: [landlordId], references: [id]) // Matches the relation in User
+  startDate   DateTime
+  endDate     DateTime
+  renewalDate DateTime?
+  status      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([propertyId], name: "propertyId")
+  @@index([tenantId], name: "tenantId")
+  @@index([landlordId], name: "landlordId")
 }
 
 model application {

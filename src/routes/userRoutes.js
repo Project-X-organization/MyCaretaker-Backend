@@ -7,6 +7,12 @@ const {
   resendOtp,
   loginUser,
   socialLogin,
+  userProfile,
+  getAllUsers,
+  submitApplication,
+  singlePropertyApplication,
+  getAllApplications,
+  updateApplicationStatus,
 } = require("../controllers/userController");
 
 const {
@@ -14,6 +20,7 @@ const {
   loginValidationRule,
 } = require("../validators/userValidator");
 const validateRequest = require("../middlewares/validateRequest");
+const { getPropertyApplications } = require("../helpers/user.helper");
 const validateRegistation = [...userValidationRules, validateRequest];
 const validateLogin = [...loginValidationRule, validateRequest];
 const router = express.Router();
@@ -42,4 +49,31 @@ router.get(
   socialLogin
 );
 
+router.get(
+  "/profile",
+  passport.authenticate("jwt", { session: false }),
+  userProfile
+);
+
+router.get("/", passport.authenticate("jwt", { session: false }), getAllUsers);
+router.post(
+  "/apply-property",
+  passport.authenticate("jwt", { session: false }),
+  submitApplication
+);
+router.get(
+  "/all-applications",
+  passport.authenticate("jwt", { session: false }),
+  getAllApplications
+);
+router.get(
+  "/property/applications/:id",
+  passport.authenticate("jwt", { session: false }),
+  singlePropertyApplication
+);
+router.patch(
+  "/application/status",
+  passport.authenticate("jwt", { session: false }),
+  updateApplicationStatus
+);
 module.exports = router;

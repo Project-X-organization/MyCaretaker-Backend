@@ -19,6 +19,9 @@ model User {
   email                   String           @unique
   phoneNumber             String           @unique
   password                String
+  isLandord               Boolean          @default(false)
+  isTenant                Boolean          @default(true)
+  isAgent                 Boolean          @default(false)
   isVerified              Boolean          @default(false)
   googleId                String?          @map("google_id")
   verificationOtp         String?
@@ -26,6 +29,7 @@ model User {
   createdAt               DateTime         @default(now())
   updatedAt               DateTime         @updatedAt
   Property                Property[]
+  applcations             application[]
   TenantLeaseAgreements   LeaseAgreement[] @relation("TenantLeaseAgreements")
   LandlordLeaseAgreements LeaseAgreement[] @relation("LandlordLeaseAgreements") // Add the missing relation here
 }
@@ -39,13 +43,12 @@ model Property {
   bathrooms      Int
   location       String
   images         String[]
+  applcations    application[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  userId         String
+  userId         String           @db.ObjectId
   user           User             @relation(fields: [userId], references: [id])
   LeaseAgreement LeaseAgreement[]
-
-  @@index([userId], name: "userId")
 }
 
 model LeaseAgreement {
@@ -53,11 +56,11 @@ model LeaseAgreement {
   terms       String
   duration    Int
   price       Float
-  propertyId  String
+  propertyId  String    @db.ObjectId
   property    Property  @relation(fields: [propertyId], references: [id])
-  tenantId    String
+  tenantId    String    @db.ObjectId
   tenant      User      @relation("TenantLeaseAgreements", fields: [tenantId], references: [id])
-  landlordId  String
+  landlordId  String    @db.ObjectId
   landlord    User      @relation("LandlordLeaseAgreements", fields: [landlordId], references: [id]) // Matches the relation in User
   startDate   DateTime
   endDate     DateTime
@@ -69,4 +72,21 @@ model LeaseAgreement {
   @@index([propertyId], name: "propertyId")
   @@index([tenantId], name: "tenantId")
   @@index([landlordId], name: "landlordId")
+}
+
+model application {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  User       User?     @relation(fields: [userId], references: [id])
+  userId     String?   @db.ObjectId
+  status     status    @default(PENDING)
+  Property   Property? @relation(fields: [propertyId], references: [id])
+  propertyId String?   @db.ObjectId
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum status {
+  PENDING
+  APPROVED
+  REJECTED
 }

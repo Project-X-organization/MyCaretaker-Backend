@@ -14,41 +14,43 @@ datasource db {
 }
 
 model User {
-  id                      String           @id @default(auto()) @map("_id") @db.ObjectId
+  id                      String              @id @default(auto()) @map("_id") @db.ObjectId
   username                String
-  email                   String           @unique
-  phoneNumber             String           @unique
+  email                   String              @unique
+  phoneNumber             String              @unique
   password                String
-  isLandord               Boolean          @default(false)
-  isTenant                Boolean          @default(true)
-  isAgent                 Boolean          @default(false)
-  isVerified              Boolean          @default(false)
-  googleId                String?          @map("google_id")
+  isLandord               Boolean             @default(false)
+  isTenant                Boolean             @default(true)
+  isAgent                 Boolean             @default(false)
+  isVerified              Boolean             @default(false)
+  googleId                String?             @map("google_id")
   verificationOtp         String?
   verificationOtpExpires  DateTime?
-  createdAt               DateTime         @default(now())
-  updatedAt               DateTime         @updatedAt
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
   Property                Property[]
   applcations             application[]
-  TenantLeaseAgreements   LeaseAgreement[] @relation("TenantLeaseAgreements")
-  LandlordLeaseAgreements LeaseAgreement[] @relation("LandlordLeaseAgreements") // Add the missing relation here
+  TenantLeaseAgreements   LeaseAgreement[]    @relation("TenantLeaseAgreements")
+  LandlordLeaseAgreements LeaseAgreement[]    @relation("LandlordLeaseAgreements") // Add 
+  management_request      ManagementRequest[]
 }
 
 model Property {
-  id             String           @id @default(auto()) @map("_id") @db.ObjectId
-  title          String
-  description    String
-  price          Float
-  bedrooms       Int
-  bathrooms      Int
-  location       String
-  images         String[]
-  applcations    application[]
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  userId         String           @db.ObjectId
-  user           User             @relation(fields: [userId], references: [id])
-  LeaseAgreement LeaseAgreement[]
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  title              String
+  description        String
+  price              Float
+  bedrooms           Int
+  bathrooms          Int
+  location           String
+  images             String[]
+  applcations        application[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  userId             String              @db.ObjectId
+  user               User                @relation(fields: [userId], references: [id])
+  LeaseAgreement     LeaseAgreement[]
+  management_request ManagementRequest[]
 }
 
 model LeaseAgreement {
@@ -89,4 +91,19 @@ enum status {
   PENDING
   APPROVED
   REJECTED
+}
+
+model ManagementRequest {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  userId      String   @db.ObjectId
+  User        User     @relation(fields: [userId], references: [id])
+  propertyId  String   @db.ObjectId
+  property    Property @relation(fields: [propertyId], references: [id])
+  status      status   @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  @@index([propertyId], name: "propertyId")
+  @@index([userId], name: "userId")
 }

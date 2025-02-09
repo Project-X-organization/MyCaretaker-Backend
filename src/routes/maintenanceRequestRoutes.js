@@ -10,12 +10,14 @@ route.post(
   managementRequest.submitManagementRequest
 );
 route.patch(
-  "/",
+  "/:id",
   passport.authenticate("jwt", { session: false }),
   managementRequest.updateRequestStatus
 );
 
+route.get(
+  "/",
+  passport.authenticate("jwt", { session: false }),
+  managementRequest.reviewAllRequests
+);
 module.exports = route;
-
-
-

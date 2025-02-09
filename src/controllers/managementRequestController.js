@@ -44,6 +44,12 @@ exports.submitManagementRequest = async (req, res) => {
 
 exports.updateRequestStatus = async (req, res) => {
   try {
+    const user = req.user;
+    console.log(user)
+    if (!user.isLandord || !user.isAgent)
+      throw new Error(
+        "User not Authorised to Update a Management Request please verify your identity"
+      );
     const { id } = req.params;
     const { status } = req.body;
     const request = await prisma.managementRequest.findUnique({
@@ -67,6 +73,7 @@ exports.updateRequestStatus = async (req, res) => {
       request: updateRequest,
     });
   } catch (error) {
+    console.log(error)
     res.status(500).json({
       message: "Error Updating the Maintenance request",
       error: error.message,
@@ -74,3 +81,20 @@ exports.updateRequestStatus = async (req, res) => {
   }
 };
 
+exports.reviewAllRequests = async (req, res) => {
+  try {
+    const requests = await prisma.managementRequest.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    res.status(200).json({
+      requests,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving requests",
+      error: error.message,
+    });
+  }
+};

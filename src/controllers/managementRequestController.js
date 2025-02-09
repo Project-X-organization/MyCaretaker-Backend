@@ -2,7 +2,7 @@ const { prisma } = require("../utils/prismaUtill");
 
 exports.submitManagementRequest = async (req, res) => {
   try {
-    const { propertyId, userId } = req.body;
+    const { propertyId, userId, title, description } = req.body;
 
     const property = await prisma.property.findUnique({
       where: {
@@ -24,6 +24,8 @@ exports.submitManagementRequest = async (req, res) => {
       data: {
         propertyId,
         userId,
+        title,
+        description,
       },
     });
     if (!managementRequest) {

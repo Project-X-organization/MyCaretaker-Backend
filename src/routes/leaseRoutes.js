@@ -19,17 +19,17 @@ leaseRoute.get('/', authenticate, leaseController.getLeases);
 leaseRoute.get('/:id', authenticate, leaseController.getLease);
 
 // get lease for landlord
-leaseRoute.get('/landlord', authenticate, leaseController.getLeasesForLandlord);
+// leaseRoute.get('/landlord', authenticate, leaseController.getLeasesForLandlord);
 
 // get lease for tenant
-leaseRoute.get('/tenant', authenticate, leaseController.getLeasesForTenant);
+// leaseRoute.get('/tenant', authenticate, leaseController.getLeasesForTenant);
 
 // get lease for property
-leaseRoute.get(
-  '/property/:id',
-  authenticate,
-  leaseController.getLeasesForProperty
-);
+// leaseRoute.get(
+//   '/property/:id',
+//   authenticate,
+//   leaseController.getLeasesForProperty
+// );
 
 // update lease
 leaseRoute.patch(

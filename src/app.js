@@ -18,6 +18,7 @@ app.use('/api/v1/properties', propertyRoutes);
 // Lease routes
 app.use('/api/v1/leases', leaseRoutes);
 app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/maintenance-request')
 // app.use((error, req, res) => {
 //     console.error(error.statusCode)
 //   res.status(error.statusCode || 500).json({

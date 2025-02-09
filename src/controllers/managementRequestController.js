@@ -41,3 +41,36 @@ exports.submitManagementRequest = async (req, res) => {
     });
   }
 };
+
+exports.updateRequestStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const request = await prisma.managementRequest.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!request) throw new Error("Maintenance request not found!");
+    const updateRequest = await prisma.managementRequest.update({
+      where: {
+        id,
+      },
+      data: {
+        status,
+      },
+    });
+    if (!updateRequest) throw new Error("Failed to update Maintenance Request");
+
+    res.status(200).json({
+      message: "Request Updated",
+      request: updateRequest,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error Updating the Maintenance request",
+      error: error.message,
+    });
+  }
+};
+

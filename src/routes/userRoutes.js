@@ -13,6 +13,7 @@ const {
   singlePropertyApplication,
   getAllApplications,
   updateApplicationStatus,
+  updateUser,
 } = require("../controllers/userController");
 
 const {
@@ -26,7 +27,7 @@ const validateLogin = [...loginValidationRule, validateRequest];
 const router = express.Router();
 
 router.post("/register", validateRegistation, registerUser);
-
+router.patch("/", updateUser);
 router.post("/verify-email", verifyEmail);
 
 router.post("/resend-otp", resendOtp);

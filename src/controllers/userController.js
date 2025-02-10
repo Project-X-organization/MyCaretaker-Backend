@@ -159,6 +159,24 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Error retrieving users." });
   }
 };
+exports.updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const user = await prisma.user.update({
+      where: {
+        id,
+      },
+      data,
+    });
+    res.status(200).json({
+      message: "User data updated!",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error Updating Users." });
+  }
+};
 
 exports.submitApplication = async (req, res) => {
   try {
@@ -185,7 +203,7 @@ exports.singlePropertyApplication = async (req, res) => {
       data: application,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res
       .status(500)
       .json({ message: "Error retrieving application", error: error.message });
@@ -217,11 +235,9 @@ exports.updateApplicationStatus = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json({
-        message: "Error updating application status",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error updating application status",
+      error: error.message,
+    });
   }
 };

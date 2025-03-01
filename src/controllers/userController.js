@@ -10,7 +10,7 @@ const {
   acceptOrRejectApplication,
 } = require("../helpers/user.helper");
 exports.registerUser = async (req, res) => {
-  const { username, email, password, phoneNumber } = req.body;
+  const { username, email, password, phoneNumber,role } = req.body;
   try {
     const isRegisterAlready = await prisma.user.findUnique({
       where: {
@@ -33,6 +33,7 @@ exports.registerUser = async (req, res) => {
         phoneNumber,
         verificationOtp,
         verificationOtpExpires,
+        role
       },
     });
     await sendEmail(
@@ -180,8 +181,8 @@ exports.updateUser = async (req, res) => {
 
 exports.submitApplication = async (req, res) => {
   try {
-    const { propertyId, userId } = req.body;
-    const application = await applyForProperty(propertyId, userId);
+    const { propertyId,landlordId, userId } = req.body;
+    const application = await applyForProperty(propertyId,landlordId, userId);
     res.status(201).json({
       message: "Application submitted successfully",
       data: application,

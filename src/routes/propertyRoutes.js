@@ -17,7 +17,7 @@ const propertyRoute = express.Router();
 propertyRoute.post(
   '/',
   authenticate,
-  upload.array('images', 5),
+  upload.array('images', 7),
   propertyValidationRules,
   validateRequest,
   createProperty

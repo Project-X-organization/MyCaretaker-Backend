@@ -3,9 +3,13 @@ const { check } = require('express-validator');
 exports.propertyValidationRules = [
   check('title').notEmpty().withMessage('Title is required'),
   check('description').notEmpty().withMessage('Description is required'),
-  check('price')
+  check('annualRent')
     .isFloat({ gt: 0 })
-    .withMessage('Price must be a positive number'),
+    .withMessage('AnnualRent must be a positive number'),
+  check('otherCharges')
+    .isFloat({ gt: 0 })
+    .withMessage('OtherCharges must be a positive number'),
+  check('propertyType').notEmpty().withMessage('PropertyType is required'),
   check('location').notEmpty().withMessage('Location is required'),
   check('bedrooms')
     .isInt({ gt: 0 })

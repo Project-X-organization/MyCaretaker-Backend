@@ -5,8 +5,10 @@ const path = require('path');
 
 exports.createProperty = async (req, res) => {
   try {
-    const { title, description, price, location, bedrooms, bathrooms } =
+    const { title, description, annualRent, otherCharges, propertyType, location, bedrooms, bathrooms } =
       req.body;
+
+      const platformFeePercentage = process.env.PLATFORM_FEE_PERCENTAGE || 0.08;
 
     // user data from the body of the request if the user is authenticated
     const userId = req.user.id;
@@ -30,11 +32,26 @@ exports.createProperty = async (req, res) => {
       }
     }
 
+    // convert annualRent and otherCharges to numbers
+    const rentAmount = parseFloat(annualRent);
+    const extraCharges = parseFloat(otherCharges) || 0;
+
+    // CALCULATE the platform fee of (8% of the annual rent)
+    const platformFee = rentAmount * platformFeePercentage;
+
+    // CALCULATE the total amount to be paid by the tenant
+    const totalPrice = rentAmount + extraCharges + platformFee;
+
+
     const property = await prisma.property.create({
       data: {
         title,
         description,
-        price: parseFloat(price),
+        annualRent: rentAmount,
+        otherCharges: extraCharges,
+        platformFee,
+        price: totalPrice,
+        propertyType,
         location,
         images,
         bedrooms: parseInt(bedrooms),
@@ -68,6 +85,7 @@ exports.getProperties = async (req, res) => {
       'updatedAt',
       'location',
       'title',
+      'propertyType',
     ];
     if (!validSortFields.includes(sortBy)) {
       return res
@@ -134,15 +152,44 @@ exports.getProperty = async (req, res) => {
 exports.updateProperty = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, price, location } = req.body;
+    const { title, description, annualRent, otherCharges, location, propertyType, bedrooms, bathrooms } = req.body;
+
+    // check  if the property exists
+    const propertyExists = await prisma.property.findUnique({
+      where: { id: id },
+    });
+    // if the property does not exist throw an error
+    if (!propertyExists) {
+      return res.status(404).json({
+        message: 'Property not found',
+      });
+    }
+
+    // convert annualRent and otherCharges to numbers
+    const rentAmount = parseFloat(annualRent) || propertyExists.annualRent;
+    const extraCharges = parseFloat(otherCharges) || propertyExists.otherCharges;
+
+    // CALCULATE the platform fee of (8% of the annual rent)
+    const platformFeePercentage = process.env.PLATFORM_FEE_PERCENTAGE || 0.08;
+
+    const platformFee = rentAmount * platformFeePercentage;
+
+    // CALCULATE the total amount to be paid by the tenant
+    const totalPrice = rentAmount + extraCharges + platformFee;
 
     const property = await prisma.property.update({
       where: { id: id },
       data: {
         title,
         description,
-        price: parseFloat(price),
+        annualRent: rentAmount,
+        otherCharges: extraCharges,
+        platformFee,
+        price: totalPrice,
+        propertyType,
         location,
+        bedrooms: parseInt(bedrooms),
+        bathrooms: parseInt(bathrooms),
       },
     });
 

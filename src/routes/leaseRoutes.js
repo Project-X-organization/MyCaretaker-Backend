@@ -3,6 +3,7 @@ const leaseController = require('../controllers/leaseController');
 const authenticate = require('../middlewares/authenticate');
 const validateRequest = require('../middlewares/validateRequest');
 const { leaseValidationRules } = require('../validators/leaseValidator');
+const upload = require('../middlewares/multer');
 
 const leaseRoute = express.Router();
 
@@ -14,22 +15,32 @@ leaseRoute.post(
   leaseController.createLease
 );
 
-leaseRoute.get('/', authenticate, leaseController.getLeases);
+// get all leases
+leaseRoute.get('/', authenticate, leaseController.getAllLeases);
 
-leaseRoute.get('/:id', authenticate, leaseController.getLease);
+leaseRoute.get('/tenant', authenticate, leaseController.getLeasesForTenant);
+
+leaseRoute.get('/:id', authenticate, leaseController.getSingleLease);
 
 // get lease for landlord
-// leaseRoute.get('/landlord', authenticate, leaseController.getLeasesForLandlord);
+leaseRoute.get('/landlord', authenticate, leaseController.getLeasesForLandlord);
 
-// get lease for tenant
-// leaseRoute.get('/tenant', authenticate, leaseController.getLeasesForTenant);
+// upload rent receipt
+leaseRoute.patch('/upload-receipt/:id',   upload.single('receipt'),authenticate, leaseController.uploadReceipt);
+
+// update lease status
+leaseRoute.patch(
+  '/status/:id',
+  authenticate,
+  leaseController.updateLeaseStatus
+);
 
 // get lease for property
-// leaseRoute.get(
-//   '/property/:id',
-//   authenticate,
-//   leaseController.getLeasesForProperty
-// );
+leaseRoute.get(
+  '/property/:id',
+  authenticate,
+  leaseController.getLeasesForProperty
+);
 
 // update lease
 leaseRoute.patch(

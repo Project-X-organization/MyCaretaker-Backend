@@ -35,13 +35,47 @@ model User {
   management_request      ManagementRequest[]
 }
 
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  CONDO
+  TOWNHOUSE
+  DUPLEX
+  TRIPLEX
+  QUADRUPLEX
+  PENTHOUSE
+  VILLA
+  MANSION
+  CASTLE
+  COTTAGE
+  BUNGALOW
+  RANCH
+  FARMHOUSE
+  MOBILE_HOME
+  TINY_HOME
+  YURT
+  TENT
+  TREEHOUSE
+  BOAT
+  RV
+  CAMPER
+  TEEPEE
+  CAVE
+  ISLAND
+  OTHER
+}
+
 model Property {
   id                 String              @id @default(auto()) @map("_id") @db.ObjectId
   title              String
   description        String
   price              Float
+  annualRent         Float  // the amount of rent per year set by the landlord
+  otherCharges       Float // any extra charges for the property
+  platformFee        Float // 8% of the annual rent
   bedrooms           Int
   bathrooms          Int
+  propertyType       PropertyType
   location           String
   images             String[]
   applcations        application[]
@@ -55,8 +89,7 @@ model Property {
 
 model LeaseAgreement {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  terms       String
-  duration    Int
+  terms       String?
   price       Float
   propertyId  String    @db.ObjectId
   property    Property  @relation(fields: [propertyId], references: [id])
@@ -67,13 +100,42 @@ model LeaseAgreement {
   startDate   DateTime
   endDate     DateTime
   renewalDate DateTime?
-  status      String
+  paymentFrequency String?
+  paymentStatus    String @default("PENDING")
+  paymentDate      DateTime?
+  paymentMethod    String?
+  receipt         String?  // URL to the receipt
+  status      String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  @@index([propertyId], name: "propertyId")
-  @@index([tenantId], name: "tenantId")
+  // Tenant References
+  references Reference[]
+
+  // Employment Details
+  employment EmploymentDetails?
+
   @@index([landlordId], name: "landlordId")
+}
+
+model Reference {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  phoneNumber   String
+  relationship  String
+  lease LeaseAgreement @relation(fields: [leaseId], references: [id])
+  leaseId String @unique @db.ObjectId
+}
+
+model EmploymentDetails {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  occupation String
+  company    String
+  address    String
+  yearsWorked Int
+  otherIncomeSource String?
+  lease       LeaseAgreement @relation(fields: [leaseId], references: [id])
+  leaseId String @unique @db.ObjectId
 }
 
 model application {

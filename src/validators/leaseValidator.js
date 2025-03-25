@@ -2,15 +2,25 @@ const { check } = require('express-validator');
 
 exports.leaseValidationRules = [
   check('propertyId').notEmpty().withMessage('Property ID is required'),
-  check('startDate')
+  check('leaseStartDate')
     .notEmpty()
     .withMessage('Lease start date is required'),
-  check('endDate').notEmpty().withMessage('Lease end date is required'),
+  check('leaseEndDate').notEmpty().withMessage('Lease end date is required'),
   check('tenantId').notEmpty().withMessage('Tenant ID is required'),
-  check('terms').notEmpty().withMessage('Lease terms is required'),
-  check('duration').notEmpty().withMessage('Lease duration is required'),
-  check('price').notEmpty().withMessage('Lease price is required'),
-  check('status').notEmpty().withMessage('Lease status is required'),
+
+  check('leaseAmount').notEmpty().withMessage('Lease amount is required'),
+  check('paymentFrequency')
+    .notEmpty()
+    .withMessage('Payment frequency is required'),
+  check('paymentDate').notEmpty().withMessage('Payment date is required'),
+  check('references').notEmpty().withMessage('References is required'),
+  check('occupation').notEmpty().withMessage('Occupation is required'),
+  check('company').notEmpty().withMessage('Company is required'),
+  check('address').notEmpty().withMessage('Address is required'),
+  check('yearsWorked').notEmpty().withMessage('Years worked is required'),
+  check('otherIncomeSource')
+    .notEmpty()
+    .withMessage('Other income source is required'),
 ];
 
 exports.validateLease = (req, res, next) => {

@@ -19,7 +19,7 @@ exports.check_api_key = (req, res, next) => {
   } else if (apiKey === process.env.AGENT_API_KEY) {
     req.user.role = "agent";
   } else {
-    return res.status(401).json({ message: "Unauthorized2" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   next();
@@ -38,7 +38,7 @@ const verifyRole = (role, apiKeyEnvVar) => {
       return next();
     }
 
-    return res.status(401).json({ message: "Unauthorized2" });
+    return res.status(401).json({ message: "Unauthorized Access" });
   };
 };
 

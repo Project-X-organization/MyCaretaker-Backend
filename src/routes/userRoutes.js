@@ -76,7 +76,7 @@ router.get(
   userProfile
 );
 
-router.get("/", passport.authenticate("jwt", { session: false }), getAllUsers);
+router.get("/",api_key.USER_KEY, passport.authenticate("jwt", { session: false }), getAllUsers);
 router.post(
   "/apply-property",
   passport.authenticate("jwt", { session: false }),

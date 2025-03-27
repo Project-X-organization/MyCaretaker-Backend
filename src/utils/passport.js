@@ -13,30 +13,72 @@ const {
   CALLBACK_ENDPOINT_PROD,
 } = process.env;
 
-// Passport local strategy
+
 passport.use(
   new LocalStrategy(
-    { usernameField: "email" },
-    async (email, password, done) => {
+    {
+      usernameField: "email",
+      passwordField: "password",
+      passReqToCallback: true,
+    },
+    async (req, email, password, done) => {
       try {
-        const user = await prisma.user.findUnique({ where: {email} });
+        console.log("Login attempt:", { email, role: req.user.role });
+
+        // Validate if role is provided
+        if (!req.user.role) {
+          console.log("Role not provided.");
+          return done(null, false, { messages: "Role is required" });
+        }
+
+        let user;
+        switch (req.user.role) {
+          case "admin":
+            user = await prisma.admin.findUnique({ where: { email } });
+            break;
+          case "user":
+            user = await prisma.user.findUnique({ where: { email } });
+            break;
+          case "agent":
+            user = await prisma.agent.findUnique({ where: { email } });
+            break;
+          default:
+            console.log("Invalid role:", req.user.role);
+            return done(null, false, { messages: "Invalid role" });
+        }
+
+        // Check if user exists
         if (!user) {
-          return done(null, false, { message: "incorrect Email" });
+          console.log("User not found:", email);
+          return done(null, false, { messages: "Incorrect Email" });
         }
+
+        // Check if email is verified
         if (!user.isVerified) {
-          return done(null, false, { message: "Email not verified!" });
+          console.log("Email not verified:", email);
+          return done(null, false, { messages: "Email not verified!" });
         }
+
+        // Check password
         const isMatch = await bcrypt.verifyData(password, user.password);
         if (!isMatch) {
-          return done(null, false, { message: "Incorrect Password" });
+          console.log("Incorrect password:", email);
+          return done(null, false, { messages: "Incorrect Password" });
         }
+
+        // Add role to user object
+        user.role = req.user.role;
+
+        console.log("Login successful:", user);
         return done(null, user);
       } catch (error) {
+        console.error("Authentication error:", error);
         return done(error);
       }
     }
   )
 );
+
 
 // jwt options
 const opts = {
@@ -47,13 +89,20 @@ const opts = {
 passport.use(
   new JwtStrategy(opts, async (jwt_payload, done) => {
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: jwt_payload.id },
-      });
+      let user;
+
+      // Try finding the user in different roles
+      user = await prisma.user.findUnique({ where: { id: jwt_payload.id } });
+      if (!user) {
+        user = await prisma.admin.findUnique({ where: { id: jwt_payload.id } });
+      }
+      if (!user) {
+        user = await prisma.agent.findUnique({ where: { id: jwt_payload.id } });
+      }
       if (user) {
         return done(null, user);
       } else {
-        return done(null, false);
+        return done(null, false, { message: "User not found" });
       }
     } catch (error) {
       return done(error, false);
@@ -85,26 +134,17 @@ passport.use(
               phoneNumber: "set-default-phonenumber",
             },
           });
-          const token = jwt.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" } // Adjust expiration as needed
-          );
+
           delete user.password;
-          return done(null, { user, token });
+          return done(null, { user });
         } else {
           const user = await prisma.user.update({
             where: { email: profile.emails[0].value },
             data: { googleId: profile.id },
           });
-          // Generate a JWT token
-          const token = jwt.sign(
-            { id: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: "1h" } // Adjust expiration as needed
-          );
+
           delete user.password;
-          done(null, { user, token });
+          done(null, { user });
         }
       } catch (error) {
         console.error(error);

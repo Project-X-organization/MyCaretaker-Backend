@@ -6,6 +6,7 @@ const passport = require("passport");
 const userRoutes = require("./routes/userRoutes");
 const maintenanceRoutes = require("./routes/maintenanceRequestRoutes");
 const morgan = require("morgan");
+const { check_api_key,ADMIN_KEY,TENANT_KEY,AGENT_KEY}  =  require("./middlewares/checkApiKey")
 // Load env variables
 dotenv.config();
 
@@ -15,6 +16,8 @@ app.use(passport.initialize());
 // Routes
 app.use(morgan("dev")); // logging middleware
 // Property routes
+
+
 app.use("/api/v1/properties", propertyRoutes);
 // Lease routes
 app.use("/api/v1/leases", leaseRoutes);

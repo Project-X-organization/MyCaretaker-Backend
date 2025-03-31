@@ -1,4 +1,4 @@
-const { connect } = require("../app");
+
 const { prisma } = require("../utils/prismaUtill");
 
 exports.applyForProperty = async (propertyId, userId) => {

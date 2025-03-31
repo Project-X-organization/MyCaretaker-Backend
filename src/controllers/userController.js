@@ -11,12 +11,25 @@ const {
 } = require("../helpers/user.helper");
 exports.registerUser = async (req, res) => {
   const { username, email, password, phoneNumber } = req.body;
+  const { role } = req.user;
   try {
-    const isRegisterAlready = await prisma.user.findUnique({
+
+    const roleModels = {
+  admin:  prisma.admin,
+  user: prisma.user,
+  agent:prisma.agent
+    }
+
+    const model = roleModels[role]
+    const isRegisterAlready = await model.findUnique({
       where: {
         email,
       },
     });
+
+    if (!model) {
+      return res.status(400).json({ message: "Invalid role specified." });
+    }
 
     if (isRegisterAlready) {
       return res.status(409).json({ message: "Email already registered." });
@@ -24,23 +37,32 @@ exports.registerUser = async (req, res) => {
     const hashedPassword = await encryptData(password);
     const verificationOtp = generateOTP();
     const verificationOtpExpires = new Date(Date.now() + 15 * 60 * 1000);
+const data = {
+  
+    username,
+    email,
+    password: hashedPassword,
+    phoneNumber,
+    verificationOtp,
+    verificationOtpExpires,
+    
+  
+}
+    if (role === "admin") {
+      delete data.verificationOtp
+      delete data.verificationOtpExpires
+    }
+    
+    const user = await model.create({
 
-    const user = await prisma.user.create({
-      data: {
-        username,
-        email,
-        password: hashedPassword,
-        phoneNumber,
-        verificationOtp,
-        verificationOtpExpires,
-      },
+      data
     });
     await sendEmail(
       email,
       "Verify your email",
       `Your verification code is: ${verificationOtp}`
     );
-    res.status(201).json({ message: "User registered successfully" });
+    res.status(201).json({ message:   ` ${role} registered successfully` });
   } catch (error) {
     console.error(error);
     res
@@ -73,7 +95,7 @@ exports.verifyEmail = async (req, res) => {
       },
     });
     // token
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id , roles:req.user.role}, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
     res.json({ message: "Email verified successfully.", token });
@@ -115,22 +137,33 @@ exports.resendOtp = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
-  const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET, {
-    expiresIn: "1d",
-  });
-  res.json({ token });
+  try {
+    
+    const token = jwt.sign({ id: req.user.id, roles:req.user.role }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+    res.json({ token });
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: "Error logging in user." });
+  }
 };
 
 // For social login
 exports.socialLogin = async (req, res) => {
-  const { user, token } = req.user;
+  const { user, roles } = req.user;
+  const token = jwt.sign(
+    { id: user.id, email: user.email, roles },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" } // Adjust expiration as needed
+  );
 
-  if (!user && token) {
+  if (!user) {
     res.redirect("/login");
   }
   res.json({
     message: "Authentication successful!",
-    token, // Client can store this for future requests
+    token,
     user,
   });
 };
@@ -180,8 +213,8 @@ exports.updateUser = async (req, res) => {
 
 exports.submitApplication = async (req, res) => {
   try {
-    const { propertyId, userId } = req.body;
-    const application = await applyForProperty(propertyId, userId);
+    const { propertyId, landlordId, userId } = req.body;
+    const application = await applyForProperty(propertyId, landlordId, userId);
     res.status(201).json({
       message: "Application submitted successfully",
       data: application,

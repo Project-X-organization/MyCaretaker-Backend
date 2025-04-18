@@ -32,6 +32,7 @@ passport.use(
         }
 
         let user;
+        // instead of this i should probably a diff method
         switch (req.user.role) {
           case "admin":
             user = await prisma.admin.findUnique({ where: { email } });
@@ -50,7 +51,7 @@ passport.use(
         // Check if user exists
         if (!user) {
           console.log("User not found:", email);
-          return done(null, false, { messages: "Incorrect Email" });
+          return done(null, false, { messages: "User not found or Incorrect Email" });
         }
 
         // Check if email is verified

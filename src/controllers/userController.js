@@ -9,16 +9,16 @@ const {
   allApplications,
   acceptOrRejectApplication,
 } = require("../helpers/user.helper");
+const roleModels = {
+admin:  prisma.admin,
+user: prisma.user,
+agent:prisma.agent
+}
 exports.registerUser = async (req, res) => {
   const { username, email, password, phoneNumber } = req.body;
   const { role } = req.user;
   try {
 
-    const roleModels = {
-  admin:  prisma.admin,
-  user: prisma.user,
-  agent:prisma.agent
-    }
 
     const model = roleModels[role]
     const isRegisterAlready = await model.findUnique({
@@ -48,11 +48,7 @@ const data = {
     
   
 }
-    if (role === "admin") {
-      delete data.verificationOtp
-      delete data.verificationOtpExpires
-    }
-    
+   
     const user = await model.create({
 
       data
@@ -62,9 +58,10 @@ const data = {
       "Verify your email",
       `Your verification code is: ${verificationOtp}`
     );
-    res.status(201).json({ message:   ` ${role} registered successfully` });
+    delete user.password
+    res.status(201).json({ message: ` ${role} registered successfully`,user });
   } catch (error) {
-    console.error(error);
+    
     res
       .status(500)
       .json({ message: "Error registering user", error: error.message });
@@ -73,12 +70,15 @@ const data = {
 
 exports.verifyEmail = async (req, res) => {
   const { email, otp } = req.body;
+  const role = req.user.role
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const model = roleModels[role]
+    const user = await model.findUnique({ where: { email } });
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
     if (user.verificationOtp !== otp) {
+     
       return res.status(400).json({ message: "Invalid OTP." });
     }
     if (user.verificationOtpExpires < new Date()) {
@@ -100,14 +100,24 @@ exports.verifyEmail = async (req, res) => {
     });
     res.json({ message: "Email verified successfully.", token });
   } catch (error) {
+    
     res.status(500).json({ message: "Error verifying email." });
   }
 };
 
 exports.resendOtp = async (req, res) => {
   const { email } = req.body;
+  const role = req.user.role
+  
   try {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const model = roleModels[role]
+    const user = await model.findUnique({ 
+      where: {
+       email,
+       
+      } 
+    });
+
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -132,6 +142,7 @@ exports.resendOtp = async (req, res) => {
       message: "New OTP sent. Please verify your email within 15 minutes.",
     });
   } catch (error) {
+    
     res.status(500).json({ message: "Error resending OTP." });
   }
 };
@@ -142,9 +153,10 @@ exports.loginUser = async (req, res) => {
     const token = jwt.sign({ id: req.user.id, roles:req.user.role }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
-    res.json({ token });
+    delete req.user.password
+    res.json({message:"user successfully logged in",user:req.user, token });
   } catch (error) {
-    console.error(error)
+    
     res.status(500).json({ message: "Error logging in user." });
   }
 };
@@ -155,7 +167,7 @@ exports.socialLogin = async (req, res) => {
   const token = jwt.sign(
     { id: user.id, email: user.email, roles },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" } // Adjust expiration as needed
+    { expiresIn: "1h" }
   );
 
   if (!user) {
@@ -211,6 +223,23 @@ exports.updateUser = async (req, res) => {
   }
 };
 
+exports.deleteUser = async (req,res) =>{
+  try {
+    const {id} = req.params;
+    const user = await prisma.user.delete({
+      where:{
+        id
+      }
+    })
+    res.status(200).json({
+      message: "User Succesfully deleted!",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting User." });
+  }
+}
+
 exports.submitApplication = async (req, res) => {
   try {
     const { propertyId, landlordId, userId } = req.body;
@@ -220,7 +249,7 @@ exports.submitApplication = async (req, res) => {
       data: application,
     });
   } catch (error) {
-    console.log(error);
+    
     res
       .status(500)
       .json({ message: "Error submitting application", error: error.message });
@@ -236,7 +265,7 @@ exports.singlePropertyApplication = async (req, res) => {
       data: application,
     });
   } catch (error) {
-    console.log(error);
+    
     res
       .status(500)
       .json({ message: "Error retrieving application", error: error.message });
@@ -251,7 +280,7 @@ exports.getAllApplications = async (req, res) => {
       data: applications,
     });
   } catch (error) {
-    console.log(error);
+    
     res
       .status(500)
       .json({ message: "Error retrieving applications", error: error.message });
@@ -267,7 +296,7 @@ exports.updateApplicationStatus = async (req, res) => {
       data: applcation,
     });
   } catch (error) {
-    console.log(error);
+    
     res.status(500).json({
       message: "Error updating application status",
       error: error.message,

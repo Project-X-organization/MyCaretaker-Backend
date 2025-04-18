@@ -14,6 +14,7 @@ const {
   getAllApplications,
   updateApplicationStatus,
   updateUser,
+  deleteUser
 } = require("../controllers/userController");
 
 const {
@@ -31,10 +32,11 @@ const api_key = require("../middlewares/checkApiKey");
 router.use(api_key.check_api_key)
 
 router.post("/register", validateRegistation,api_key.check_api_key, registerUser);
-router.patch("/", updateUser);
+router.patch("/:id",api_key.check_api_key, updateUser);
+router.delete("/:id", api_key.ADMIN_KEY, passport.authenticate("jwt", { session: false }), deleteUser);
 router.post("/verify-email", verifyEmail);
 
-router.post("/resend-otp", resendOtp);
+router.post("/resend-otp",api_key.check_api_key, resendOtp);
 
 router.post(
   "/login",
@@ -76,7 +78,7 @@ router.get(
   userProfile
 );
 
-router.get("/", passport.authenticate("jwt", { session: false }), getAllUsers);
+router.get("/", api_key.ADMIN_KEY, passport.authenticate("jwt", { session: false }), getAllUsers);
 router.post(
   "/apply-property",
   passport.authenticate("jwt", { session: false }),

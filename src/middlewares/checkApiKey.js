@@ -7,7 +7,7 @@ exports.check_api_key = (req, res, next) => {
 
   req.user = req.user || {};
 
-  console.log(req.headers)
+  
   if (!apiKey ) {
     return res.status(401).json({ message: "api key not found" });
   }

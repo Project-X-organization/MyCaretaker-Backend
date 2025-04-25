@@ -48,20 +48,30 @@ const data = {
     
   
 }
+    if(role === "admin"){
+      delete data.verificationOtp
+      delete data.verificationOtpExpires
+      
+    }
    
     const user = await model.create({
-
       data
     });
-    await sendEmail(
-      email,
-      "Verify your email",
-      `Your verification code is: ${verificationOtp}`
-    );
+
+    if(role === "user" || role === "agent"){
+      
+        await sendEmail(
+          email,
+          "Verify your email",
+          `Your verification code is: ${verificationOtp}`
+        );
+        
+    }
+    
     delete user.password
     res.status(201).json({ message: ` ${role} registered successfully`,user });
   } catch (error) {
-    
+    console.log(error)
     res
       .status(500)
       .json({ message: "Error registering user", error: error.message });

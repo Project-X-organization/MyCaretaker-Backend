@@ -7,10 +7,19 @@ const userRoutes = require("./routes/userRoutes");
 const maintenanceRoutes = require("./routes/maintenanceRequestRoutes");
 const morgan = require("morgan");
 const { check_api_key,ADMIN_KEY,TENANT_KEY,AGENT_KEY}  =  require("./middlewares/checkApiKey")
+const cors = require("cors")
 // Load env variables
 dotenv.config();
 
 const app = express();
+app.use(cors(
+    {
+        origin:true,
+        credentials:true,
+        methods:"GET,HEAD,PUT,PATCH,POST,DELETE",
+        exposedHeaders:"x-api-key"
+    }
+))
 app.use(express.json());
 app.use(passport.initialize());
 // Routes

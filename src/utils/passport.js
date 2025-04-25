@@ -55,7 +55,7 @@ passport.use(
         }
 
         // Check if email is verified
-        if (!user.isVerified) {
+        if (!user.isVerified && req.user.role !== "admin") {
           console.log("Email not verified:", email);
           return done(null, false, { messages: "Email not verified!" });
         }

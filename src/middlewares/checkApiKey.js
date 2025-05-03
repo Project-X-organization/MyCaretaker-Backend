@@ -43,5 +43,5 @@ const verifyRole = (role, apiKeyEnvVar) => {
 };
 
 exports.ADMIN_KEY = verifyRole("admin", "ADMIN_API_KEY");
-exports.USER_KEY = verifyRole("tenant", "USER_API_KEY");
+exports.USER_KEY = verifyRole("user", "USER_API_KEY");
 exports.AGENT_KEY = verifyRole("agent", "AGENT_API_KEY");

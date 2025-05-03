@@ -6,7 +6,7 @@ const passport = require("passport");
 const userRoutes = require("./routes/userRoutes");
 const maintenanceRoutes = require("./routes/maintenanceRequestRoutes");
 const morgan = require("morgan");
-const { check_api_key,ADMIN_KEY,TENANT_KEY,AGENT_KEY}  =  require("./middlewares/checkApiKey")
+const { check_api_key,ADMIN_KEY,USER_KEY,AGENT_KEY}  =  require("./middlewares/checkApiKey")
 const cors = require("cors")
 // Load env variables
 dotenv.config();

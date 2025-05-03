@@ -39,7 +39,7 @@ exports.createProperty = async (req, res) => {
     // CALCULATE the platform fee of (8% of the annual rent)
     const platformFee = rentAmount * platformFeePercentage;
 
-    // CALCULATE the total amount to be paid by the tenant
+    // CALCULATE the total amount to be paid by the user
     const totalPrice = rentAmount + extraCharges + platformFee;
 
 
@@ -174,7 +174,7 @@ exports.updateProperty = async (req, res) => {
 
     const platformFee = rentAmount * platformFeePercentage;
 
-    // CALCULATE the total amount to be paid by the tenant
+    // CALCULATE the total amount to be paid by the user
     const totalPrice = rentAmount + extraCharges + platformFee;
 
     const property = await prisma.property.update({

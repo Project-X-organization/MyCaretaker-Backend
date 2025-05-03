@@ -18,12 +18,12 @@ leaseRoute.post(
 // get all leases
 leaseRoute.get('/', authenticate, leaseController.getAllLeases);
 
-leaseRoute.get('/tenant', authenticate, leaseController.getLeasesForTenant);
+leaseRoute.get('/user', authenticate, leaseController.getLeasesForuser);
 
 leaseRoute.get('/:id', authenticate, leaseController.getSingleLease);
 
-// get lease for landlord
-leaseRoute.get('/landlord', authenticate, leaseController.getLeasesForLandlord);
+// get lease for agent
+leaseRoute.get('/agent', authenticate, leaseController.getLeasesForagent);
 
 // upload rent receipt
 leaseRoute.patch('/upload-receipt/:id',   upload.single('receipt'),authenticate, leaseController.uploadReceipt);

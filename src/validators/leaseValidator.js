@@ -6,7 +6,7 @@ exports.leaseValidationRules = [
     .notEmpty()
     .withMessage('Lease start date is required'),
   check('leaseEndDate').notEmpty().withMessage('Lease end date is required'),
-  check('tenantId').notEmpty().withMessage('Tenant ID is required'),
+  check('userId').notEmpty().withMessage('user ID is required'),
 
   check('leaseAmount').notEmpty().withMessage('Lease amount is required'),
   check('paymentFrequency')

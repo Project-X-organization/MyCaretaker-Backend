@@ -83,7 +83,9 @@ exports.verifyEmail = async (req, res) => {
   const role = req.user.role
   try {
     const model = roleModels[role]
+    console.log(model)
     const user = await model.findUnique({ where: { email } });
+    console.log(user)
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
@@ -252,8 +254,8 @@ exports.deleteUser = async (req,res) =>{
 
 exports.submitApplication = async (req, res) => {
   try {
-    const { propertyId, landlordId, userId } = req.body;
-    const application = await applyForProperty(propertyId, landlordId, userId);
+    const { propertyId, agentId, userId } = req.body;
+    const application = await applyForProperty(propertyId, agentId, userId);
     res.status(201).json({
       message: "Application submitted successfully",
       data: application,

@@ -7,7 +7,7 @@ exports.createLease = async (req, res) => {
     propertyId,
     leaseStartDate,
     leaseEndDate,
-    tenantId,
+    userId,
     leaseAmount,
     paymentFrequency,
     paymentMethod,
@@ -56,15 +56,15 @@ exports.createLease = async (req, res) => {
           },
         },
 
-        // Connect the lease to the tenant
-        tenant: {
+        // Connect the lease to the user
+        user: {
           connect: {
-            id: tenantId,
+            id: userId,
           },
         },
 
-        // Connect the lease to the landlord
-        landlord: {
+        // Connect the lease to the agent
+        agent: {
           connect: {
             id: req.user.id,
           },
@@ -82,19 +82,19 @@ exports.createLease = async (req, res) => {
   }
 };
 
-// GET all leases for a Tenant
-exports.getLeasesForTenant = async (req, res) => {
+// GET all leases for a user
+exports.getLeasesForuser = async (req, res) => {
   try {
     const userId = req.user.id;
     const leases = await prisma.leaseAgreement.findMany({
       where: {
-        tenantId: userId,
+        userId: userId,
       },
       include: {
         references: true,
         employment: true,
         property: true,
-        landlord: true,
+        agent: true,
       },
     });
     res
@@ -106,19 +106,19 @@ exports.getLeasesForTenant = async (req, res) => {
       .json({ message: "Error fetching leases", error: error.message });
   }
 };
-// GET all leases for a Landlord
-exports.getLeasesForLandlord = async (req, res) => {
+// GET all leases for a agent
+exports.getLeasesForagent = async (req, res) => {
   try {
     const userId = req.user.id;
     const leases = await prisma.leaseAgreement.findMany({
       where: {
-        landlordId: userId,
+        agentId: userId,
       },
       include: {
         references: true,
         employment: true,
         property: true,
-        tenant: true,
+        user: true,
       },
     });
     res
@@ -141,8 +141,8 @@ exports.getLeasesForProperty = async (req, res) => {
       include: {
         references: true,
         employment: true,
-        tenant: true,
-        landlord: true,
+        user: true,
+        agent: true,
       },
     });
     res
@@ -167,8 +167,8 @@ exports.getSingleLease = async (req, res) => {
         references: true,
         employment: true,
         property: true,
-        tenant: true,
-        landlord: true,
+        user: true,
+        agent: true,
       },
     });
     res
@@ -187,7 +187,7 @@ exports.updateLease = async (req, res) => {
     propertyId,
     leaseStartDate,
     leaseEndDate,
-    tenantId,
+    userId,
     leaseAmount,
     paymentFrequency,
     paymentDate,
@@ -214,7 +214,7 @@ exports.updateLease = async (req, res) => {
         leaseStartDate:
           new Date(leaseStartDate) || existingLease.leaseStartDate,
         leaseEndDate: new Date(leaseEndDate) || existingLease.leaseEndDate,
-        tenantId,
+        userId,
         leaseAmount: parseFloat(leaseAmount) || existingLease.leaseAmount,
         paymentFrequency,
         paymentDate: new Date(paymentDate) || existingLease.paymentDate,
@@ -284,8 +284,8 @@ exports.getAllLeases = async (req, res) => {
         references: true,
         employment: true,
         property: true,
-        tenant: true,
-        landlord: true,
+        user: true,
+        agent: true,
       },
     });
     res

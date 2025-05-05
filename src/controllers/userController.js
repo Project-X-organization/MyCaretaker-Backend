@@ -194,13 +194,17 @@ exports.socialLogin = async (req, res) => {
 
 exports.userProfile = async (req, res) => {
   const { id } = req.user;
+  const roles =req.user.role;
+
   try {
-    const user = await prisma.user.findUnique({ where: { id } });
+    const model = roleModels[roles]
+    const user = await model.findUnique({ where: { id } });
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
     res.json(user);
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: "Error retrieving user profile." });
   }
 };

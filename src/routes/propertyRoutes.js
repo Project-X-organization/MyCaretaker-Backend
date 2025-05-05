@@ -1,40 +1,68 @@
-const express = require('express');
-const {
-  createProperty,
-  getProperties,
-  getProperty,
-  updateProperty,
-  deleteProperty,
-} = require('../controllers/propertyController');
-const upload = require('../middlewares/multer');
-const authenticate = require('../middlewares/authenticate');
+const express = require("express");
+const propertyController = require("../controllers/propertyController");
+const upload = require("../middlewares/multer");
+const authenticate = require("../middlewares/authenticate");
+const { authorize } = require("../middlewares/authorize");
 
-const { propertyValidationRules } = require('../validators/propertyValidator');
-const validateRequest = require('../middlewares/validateRequest');
+const { propertyValidationRules } = require("../validators/propertyValidator");
+const validateRequest = require("../middlewares/validateRequest");
+
+// test this
+const passport = require("passport");
+require("../utils/passport");
+const api_key = require("../middlewares/checkApiKey");
 
 const propertyRoute = express.Router();
 
+propertyRoute.use(api_key.check_api_key);
+
+// public routes (for users / guests)
+propertyRoute.get(
+  "/",
+  api_key.ADMIN_KEY,
+  passport.authenticate("jwt", { session: false }),
+  propertyController.getProperties
+);
+propertyRoute.get(
+  "/:id",
+  passport.authenticate("jwt", { session: false }),
+  propertyController.getProperty
+);
+
+// AGENT ROUTES (must be authenticated and have 'agent' role)
 propertyRoute.post(
-  '/',
+  "/",
   authenticate,
-  upload.array('images', 7),
+  authorize("agent"),
+  upload.array("images", 7),
   propertyValidationRules,
   validateRequest,
-  createProperty
+  propertyController.createProperty
 );
-
-propertyRoute.get('/', getProperties);
-
-propertyRoute.get('/:id', getProperty);
 
 propertyRoute.patch(
-  '/:id',
+  "/:id",
   authenticate,
-  upload.array('images', 5),
+  authorize("agent"),
+  upload.array("images", 5),
   propertyValidationRules,
-  updateProperty
+  propertyController.updateProperty
 );
 
-propertyRoute.delete('/:id', authenticate, deleteProperty);
+// ADMIN ROUTES (must be authenticated and have 'admin' role)
+
+propertyRoute.delete(
+  "/:id",
+  authenticate,
+  authorize("agent", "admin"),
+  propertyController.deleteProperty
+);
+
+propertyRoute.patch(
+  "/admin/:id/status",
+  authenticate,
+  authorize("admin"),
+  propertyController.changePropertyStatus
+);
 
 module.exports = propertyRoute;

@@ -110,8 +110,8 @@ model Property {
   Agent              Agent?              @relation(fields: [agentId], references: [id])
   agentId            String?             @db.ObjectId
   // isAvailable        Boolean             @default(true)
-  status            String?            @default("PENDING")
-  leaseStatus        String?            @default("PENDING")
+  status            String?            @default("pending")
+  leaseStatus        String?            @default("pending")
   isDeleted         Boolean             @default(false)
   deletedAt         DateTime?
 }
@@ -129,11 +129,11 @@ model LeaseAgreement {
   endDate           DateTime
   renewalDate       DateTime?
   paymentFrequency  String?
-  paymentStatus     String             @default("PENDING")
+  paymentStatus     String             @default("pending")
   paymentDate       DateTime?
   paymentMethod     String?
   receipt           String? // URL to the receipt
-  status            String?            @default("PENDING")
+  status            String?            @default("pending")
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
   Agent             Agent?             @relation("AgentLeaseAgreement", fields: [agentId], references: [id])

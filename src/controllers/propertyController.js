@@ -75,8 +75,10 @@ exports.createProperty = async (req, res) => {
 
 exports.getProperties = async (req, res) => {
   try {
-    const { search, sortBy = 'createdAt', sortOrder = 'asc' } = req.query;
-
+    const { search, sortBy = 'createdAt', sortOrder = 'asc', status } = req.query;
+    const userId = req.user.id; // Get the user ID from the request
+    const role = req.user.role; // Get the user role from the request
+    console.log(req.user) 
     // List of valid fields to sort by
     const validSortFields = [
       'price',
@@ -102,6 +104,27 @@ exports.getProperties = async (req, res) => {
         { location: { contains: search, mode: 'insensitive' } },
       ];
     }
+
+    // Role-based filtering
+    if (role === 'admin') {
+      // Admin can see all properties except deleted ones
+      where.isDeleted = false;
+      if (status) {
+        where.status = status;
+      }
+    }else if(role === 'agent'){
+      // Agent can see their own properties and approved ones
+      where.agentId = userId,
+      where.isDeleted = false;
+      if(status) {
+        where.status = status;
+      }
+    } else {
+      // regular user can only see approved properties and not deleted ones
+      where.status = 'approved';
+      where.isDeleted = false;
+    }
+       
 
     // Fetch properties with filtering and sorting
     const properties = await prisma.property.findMany({
@@ -153,7 +176,13 @@ exports.updateProperty = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, annualRent, otherCharges, location, propertyType, bedrooms, bathrooms } = req.body;
-
+    // const role = req.user.role
+    // // CHECK IF THE USER IS AN AGENT OR ADMIN
+    // if(role != 'agent' || role != 'admin'){
+    //   return res.status(403).json({
+    //     message: "someting" 
+    //   })
+    // }
     // check  if the property exists
     const propertyExists = await prisma.property.findUnique({
       where: { id: id },
@@ -209,9 +238,10 @@ exports.deleteProperty = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await prisma.property.delete({
-      where: { id: id },
-    });
+    await prisma.property.update({
+      where: {id},
+      data: { isDeleted: true, deletedAt: new Date() }
+    })
 
     res.status(200).json({
       message: 'Property deleted successfully',
@@ -223,3 +253,26 @@ exports.deleteProperty = async (req, res) => {
     });
   }
 };
+
+
+// ADMIN ROUTES
+exports.changePropertyStatus = async (req, res) =>{
+  try {
+    const { id } = req.params;
+    const { status } = req.query;
+    const property = await prisma.property.update({
+      where: { id },
+      data: { status: status }
+    });
+    
+    res.status(200).json({
+      message: `Property ${status} successfully`,
+      data: property,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Error approving property',
+      error: error.message,
+    })
+  }
+}

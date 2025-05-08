@@ -73,7 +73,7 @@ router.get(
 
 router.get(
   "/profile",
-  api_key.USER_KEY,
+  api_key.check_api_key,
   passport.authenticate("jwt", { session: false }),
   userProfile
 );

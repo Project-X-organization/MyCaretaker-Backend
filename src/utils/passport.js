@@ -69,7 +69,7 @@ passport.use(
 
         // Add role to user object
         user.role = req.user.role;
-
+        
         console.log("Login successful:", user);
         return done(null, user);
       } catch (error) {
@@ -101,6 +101,7 @@ passport.use(
         user = await prisma.agent.findUnique({ where: { id: jwt_payload.id } });
       }
       if (user) {
+        user.role = jwt_payload.roles;
         return done(null, user);
       } else {
         return done(null, false, { message: "User not found" });

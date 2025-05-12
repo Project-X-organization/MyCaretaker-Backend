@@ -112,7 +112,7 @@ model Property {
   // isAvailable        Boolean             @default(true)
   status            String?            @default("pending")
   leaseStatus        String?            @default("pending")
-  isDeleted         Boolean             @default(false)
+  isDeleted         Boolean?             @default(false)
   deletedAt         DateTime?
 }
 

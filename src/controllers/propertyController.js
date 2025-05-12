@@ -108,12 +108,13 @@ exports.getProperties = async (req, res) => {
     // Role-based filtering
     if (role === 'admin') {
       // Admin can see all properties except deleted ones
-      where.isDeleted = false;
+      // where.isDeleted = false;
       if (status) {
         where.status = status;
       }
     }else if(role === 'agent'){
       // Agent can see their own properties and approved ones
+      // console.log('agent')
       where.agentId = userId,
       where.isDeleted = false;
       if(status) {
@@ -121,7 +122,8 @@ exports.getProperties = async (req, res) => {
       }
     } else {
       // regular user can only see approved properties and not deleted ones
-      where.status = 'approved';
+      // console.log('user')
+      // where.status = 'approved';
       where.isDeleted = false;
     }
        

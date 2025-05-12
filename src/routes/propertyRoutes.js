@@ -19,8 +19,9 @@ propertyRoute.use(api_key.check_api_key);
 // public routes (for users / guests)
 propertyRoute.get(
   "/",
-  api_key.ADMIN_KEY,
-  passport.authenticate("jwt", { session: false }),
+  api_key.USER_KEY,
+
+  // passport.authenticate("jwt", { session: false }),
   propertyController.getProperties
 );
 propertyRoute.get(
@@ -32,9 +33,10 @@ propertyRoute.get(
 // AGENT ROUTES (must be authenticated and have 'agent' role)
 propertyRoute.post(
   "/",
-  authenticate,
-  authorize("agent"),
-  upload.array("images", 7),
+  // authenticate,
+  // authorize("agent"),
+  passport.authenticate("jwt", { session: false}),
+  // upload.array("images", 7),
   propertyValidationRules,
   validateRequest,
   propertyController.createProperty

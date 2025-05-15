@@ -42,6 +42,9 @@ exports.createProperty = async (req, res) => {
     // CALCULATE the total amount to be paid by the user
     const totalPrice = rentAmount + extraCharges + platformFee;
 
+    // add current user as the agent of the property
+    const agentId = userId;
+
 
     const property = await prisma.property.create({
       data: {
@@ -56,7 +59,8 @@ exports.createProperty = async (req, res) => {
         images,
         bedrooms: parseInt(bedrooms),
         bathrooms: parseInt(bathrooms),
-        userId: userId,
+        // userId: userId,
+        agentId: agentId
       },
     });
 

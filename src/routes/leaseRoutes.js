@@ -2,28 +2,33 @@ const express = require('express');
 const leaseController = require('../controllers/leaseController');
 const authenticate = require('../middlewares/authenticate');
 const validateRequest = require('../middlewares/validateRequest');
-const { leaseValidationRules } = require('../validators/leaseValidator');
+const { validateLease, leaseValidationRules } = require('../validators/leaseValidator');
 const upload = require('../middlewares/multer');
 
+const passport = require("passport");
+require("../utils/passport");
+const api_key = require("../middlewares/checkApiKey");
+
 const leaseRoute = express.Router();
+
+leaseRoute.use(api_key.check_api_key);
 
 leaseRoute.post(
   '/',
   authenticate,
+  // api_key.USER_KEY,
+  // api_key.check_api_key,
+  // passport.authenticate("jwt", { session: false }),
+  // authenticate,
   leaseValidationRules,
   validateRequest,
   leaseController.createLease
 );
 
 // get all leases
-leaseRoute.get('/', authenticate, leaseController.getAllLeases);
-
-leaseRoute.get('/user', authenticate, leaseController.getLeasesForuser);
+leaseRoute.get('/', authenticate, leaseController.getLeases);
 
 leaseRoute.get('/:id', authenticate, leaseController.getSingleLease);
-
-// get lease for agent
-leaseRoute.get('/agent', authenticate, leaseController.getLeasesForagent);
 
 // upload rent receipt
 leaseRoute.patch('/upload-receipt/:id',   upload.single('receipt'),authenticate, leaseController.uploadReceipt);
@@ -31,21 +36,12 @@ leaseRoute.patch('/upload-receipt/:id',   upload.single('receipt'),authenticate,
 // update lease status
 leaseRoute.patch(
   '/status/:id',
-  authenticate,
-  leaseController.updateLeaseStatus
-);
-
-// get lease for property
-leaseRoute.get(
-  '/property/:id',
-  authenticate,
-  leaseController.getLeasesForProperty
+  leaseController.changeLeaseStatus
 );
 
 // update lease
 leaseRoute.patch(
   '/:id',
-  authenticate,
   leaseValidationRules,
   validateRequest,
   leaseController.updateLease

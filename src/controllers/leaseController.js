@@ -7,7 +7,7 @@ exports.createLease = async (req, res) => {
     propertyId,
     leaseStartDate,
     leaseEndDate,
-    userId,
+    // userId,
     leaseAmount,
     paymentFrequency,
     paymentMethod,
@@ -18,8 +18,54 @@ exports.createLease = async (req, res) => {
     address,
     yearsWorked,
     otherIncomeSource,
+    terms,
   } = req.body;
   try {
+    const userId = req.user.id;
+
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: {
+        agentId: true, // or whatever the field is
+      },
+    });
+
+    if (!property || !property.agentId) {
+      throw new Error("No agent associated with this property");
+    }
+
+    const agentId = property.agentId;
+
+    // check to see if the property is already leased
+    const existingLease = await prisma.leaseAgreement.findFirst({
+      where: {
+        propertyId, 
+        status: "approved",
+        OR: [
+          {
+            startDate: {
+              lte: new Date("2026-03-31T00:00:00.000Z"),
+            },
+          },
+          {
+            endDate: {
+              gte: new Date("2025-04-01T00:00:00.000Z"),
+            },
+          },
+        ],
+      },
+    });
+
+    if (existingLease) {
+      throw new Error("Property is already leased");
+    }
+
+    // Ensure references are properly structured
+    const formattedReferences = references.map((ref) => ({
+      name: ref.name,
+      relationship: ref.relationship,
+      phoneNumber: ref.phoneNumber,
+    }));
     const lease = await prisma.leaseAgreement.create({
       data: {
         startDate: new Date(leaseStartDate),
@@ -28,18 +74,15 @@ exports.createLease = async (req, res) => {
         paymentDate: new Date(paymentDate),
         paymentMethod,
         price: parseFloat(leaseAmount),
+        terms,
 
         // Adding references
         references: {
-          create: references.map((ref) => ({
-            name: ref.name,
-            relationship: ref.relationship,
-            phoneNumber: ref.phoneNumber,
-          })),
+          create: formattedReferences,
         },
 
         // Adding employment details
-        employment: {
+        EmploymentDetails: {
           create: {
             occupation,
             company,
@@ -64,9 +107,9 @@ exports.createLease = async (req, res) => {
         },
 
         // Connect the lease to the agent
-        agent: {
+        Agent: {
           connect: {
-            id: req.user.id,
+            id: agentId
           },
         },
       },
@@ -82,72 +125,100 @@ exports.createLease = async (req, res) => {
   }
 };
 
-// GET all leases for a user
-exports.getLeasesForuser = async (req, res) => {
+// GET Leases
+exports.getLeases = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const {
+      search,
+      sortBy = "createdAt",
+      sortOrder = "asc",
+      status,
+      propertyId,
+      userId,
+      agentId,
+    } = req.query;
+    const role = req.user.role;
+    const currentUserId = req.user.id;
+
+    // List of valid fields to sort by
+    const validSortFields = [
+      "price",
+      "startDate",
+      "endDate",
+      "createdAt",
+      "updatedAt",
+      "paymentStatus",
+    ];
+    if (!validSortFields.includes(sortBy)) {
+      return res
+        .status(400)
+        .json({ message: `'${sortBy}' is not a valid sort field` });
+    }
+
+    const where = {};
+
+    if (search) {
+      where.OR = [
+        { terms: { contains: search, mode: "insensitive" } },
+        { paymentMethod: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    // Apply role-based filtering
+    if (role === "admin") {
+      // admin can see all leases
+      if (status) {
+        where.status = status;
+      }
+    } else if (role === "agent") {
+      // agent case lease associated with their property
+      where.agentId = currentUserId;
+      if (status) {
+        where.status = status;
+      }
+    } else {
+      // Regular user can only see their own leases
+      where.userId = currentUserId;
+      if (status) {
+        where.status = status;
+      }
+    }
+
+    // Apply additional filters if provided
+    if (propertyId) {
+      where.propertyId = propertyId;
+    }
+
+    if (userId) {
+      where.userId = userId;
+    }
+    if (agentId) {
+      where.agentId = agentId;
+    }
+
+    // Fetch leases with filtering and sorting
     const leases = await prisma.leaseAgreement.findMany({
-      where: {
-        userId: userId,
-      },
-      include: {
-        references: true,
-        employment: true,
-        property: true,
-        agent: true,
-      },
-    });
-    res
-      .status(200)
-      .json({ message: "Leases fetched successfully", data: leases });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching leases", error: error.message });
-  }
-};
-// GET all leases for a agent
-exports.getLeasesForagent = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const leases = await prisma.leaseAgreement.findMany({
-      where: {
-        agentId: userId,
+      where, //filtering conditoins
+      orderBy: {
+        [sortBy]: sortOrder.toLowerCase(), //Sorting field
       },
       include: {
         references: true,
         employment: true,
         property: true,
         user: true,
-      },
-    });
-    res
-      .status(200)
-      .json({ message: "Leases fetched successfully", data: leases });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching leases", error: error.message });
-  }
-};
-// GET all leases for a property
-exports.getLeasesForProperty = async (req, res) => {
-  try {
-    const propertyId = req.params.id;
-    const leases = await prisma.leaseAgreement.findMany({
-      where: {
-        propertyId,
-      },
-      include: {
-        references: true,
-        employment: true,
-        user: true,
         agent: true,
       },
     });
-    res
-      .status(200)
-      .json({ message: "Leases fetched successfully", data: leases });
+
+    //count of lease
+    const result = leases.length();
+
+    res.status(200).json({
+      message: "Leases retrieved successfully",
+      result: result,
+      data: leases,
+    });
   } catch (error) {
     res
       .status(500)
@@ -265,36 +336,17 @@ exports.updateLease = async (req, res) => {
 exports.deleteLease = async (req, res) => {
   try {
     const { id } = req.params;
-    await prisma.lease.delete({
+
+    // set isDeleted to true
+    await prisma.lease.update({
       where: { id },
+      data: { isDeleted: true, deletedAt: new Date() },
     });
     res.status(200).json({ message: "Lease deleted successfully" });
   } catch (error) {
     res
       .status(500)
       .json({ message: "Error deleting lease", error: error.message });
-  }
-};
-
-// GET all leases
-exports.getAllLeases = async (req, res) => {
-  try {
-    const leases = await prisma.leaseAgreement.findMany({
-      include: {
-        references: true,
-        employment: true,
-        property: true,
-        user: true,
-        agent: true,
-      },
-    });
-    res
-      .status(200)
-      .json({ message: "Leases fetched successfully", data: leases });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching leases", error: error.message });
   }
 };
 
@@ -368,5 +420,29 @@ exports.uploadReceipt = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error uploading receipt", error: error.message });
+  }
+};
+
+exports.changeLeaseStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let { status } = req.body;
+    status = status.toLowerCase();
+    const lease = await prisma.leaseAgreement.update({
+      where: { id },
+      data: {
+        status,
+      },
+    });
+
+    // update the property if the lease is approved
+
+    res
+      .status(200)
+      .json({ message: "Lease status updated successfully", data: lease });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating lease status", error: error.message });
   }
 };

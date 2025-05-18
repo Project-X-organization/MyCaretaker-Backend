@@ -1,6 +1,7 @@
 const { prisma } = require("../utils/prismaUtill");
 const cloudinary = require("../config/cloudinary");
 const path = require("path");
+const { stat } = require("fs");
 
 exports.createLease = async (req, res) => {
   const {
@@ -179,10 +180,10 @@ exports.getLeases = async (req, res) => {
     } else {
       // Regular user can only see their own leases
       where.userId = currentUserId;
-      if (status) {
-        where.status = status;
-      }
+      // where.status = "approved";
     }
+
+  
 
     // Apply additional filters if provided
     if (propertyId) {
@@ -204,15 +205,35 @@ exports.getLeases = async (req, res) => {
       },
       include: {
         references: true,
-        employment: true,
-        property: true,
-        user: true,
-        agent: true,
+        employmentDetails: true,
+        property: {
+          select: {
+            title: true,
+            price: true,
+            location: true,
+            propertyType: true,
+            description: true,
+          }
+        },
+        user: {
+          select: {
+            username: true,
+            email: true,
+            phoneNumber: true,
+          }
+        },
+        agent: {
+          select: {
+            username: true,
+            email: true,
+            phoneNumber: true,
+          }
+        },
       },
     });
 
     //count of lease
-    const result = leases.length();
+    const result = leases.length;
 
     res.status(200).json({
       message: "Leases retrieved successfully",
@@ -236,7 +257,7 @@ exports.getSingleLease = async (req, res) => {
       },
       include: {
         references: true,
-        employment: true,
+        employmentDetails: true,
         property: true,
         user: true,
         agent: true,
@@ -426,12 +447,27 @@ exports.uploadReceipt = async (req, res) => {
 exports.changeLeaseStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    let { status } = req.body;
+    let { status, rejectionReason } = req.body;
     status = status.toLowerCase();
+    // const lease = await prisma.leaseAgreement.update({
+    //   where: { id },
+    //   data: {
+    //     status,
+    //   },
+    // });
+
+    // check if status is rejected add rejectionReason and rejectionDate
+    if (status === "rejected") {
+      where.rejectionReason = req.body.rejectionReason;
+      where.rejectionDate = new Date();
+    }
+
     const lease = await prisma.leaseAgreement.update({
       where: { id },
       data: {
         status,
+        rejectionReason: req.body.rejectionReason,
+        rejectionDate: new Date(),
       },
     });
 
@@ -444,5 +480,62 @@ exports.changeLeaseStatus = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error updating lease status", error: error.message });
+  }
+};
+
+// renew lease
+exports.renewLease = async (req, res) => {
+  const { id } = req.params;
+  const { leaseStartDate, leaseEndDate, paymentFrequency, paymentMethod, terms, price,  } = req.body;
+  try {
+    // check if lease exists
+    const existingLease = await prisma.leaseAgreement.findUnique({
+      where: { id },
+      include: {
+        property: true,
+        user: true,
+        agent: true,
+      },
+    });
+
+    if (!existingLease) {
+      return res.status(404).json({ message: "Lease not found" });
+    }
+
+    // update old lease to expired
+    await prisma.leaseAgreement.update({
+      where: { id },
+      data: {
+        status: "expired",
+      },
+    });
+
+    // create new lease
+    const lease = await prisma.leaseAgreement.create({
+      data: {
+        paymentFrequency: paymentFrequency,
+        paymentMethod: paymentMethod,
+        terms: terms,
+        price: parseFloat(price),
+        employmentDetails: {
+          connect: {
+            id: existingLease.employmentDetailsId,
+          },
+        },
+        user: { connect: { id: existingLease.userId } },
+        property: { connect: { id: existingLease.propertyId } },
+        agent: { connect: { id: existingLease.agentId } },
+        startDate: new Date(leaseStartDate),
+        endDate: new Date(leaseEndDate),
+      },
+    });
+
+    res
+      .status(200)
+      .json({ message: "Lease renewed successfully", data: lease });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error renewing lease", error: error.message });
   }
 };

@@ -134,14 +134,16 @@ model LeaseAgreement {
   paymentMethod     String?
   receipt           String? // URL to the receipt
   status            String?            @default("pending")
+  rejectionReason   String?
+  rejectionDate     DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
-  Agent             Agent?             @relation("AgentLeaseAgreement", fields: [agentId], references: [id])
+  agent             Agent?             @relation("AgentLeaseAgreement", fields: [agentId], references: [id])
   agentId           String?            @db.ObjectId
   isDeleted        Boolean?          @default(false)
   deletedAt        DateTime?
   references         Reference[]
-  EmploymentDetails EmploymentDetails?
+  employmentDetails EmploymentDetails?
 
   @@index([agentId], name: "agentId")
   @@index([propertyId], name: "propertyId")

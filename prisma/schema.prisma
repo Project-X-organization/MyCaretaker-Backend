@@ -110,8 +110,8 @@ model Property {
   Agent              Agent?              @relation(fields: [agentId], references: [id])
   agentId            String?             @db.ObjectId
   // isAvailable        Boolean             @default(true)
-  status            String?            @default("pending")
-  leaseStatus        String?            @default("pending")
+  status            status?           // @default(status.pending)
+  leaseStatus        status?            //@default(status.pending)
   isDeleted         Boolean?             @default(false)
   deletedAt         DateTime?
 }
@@ -119,7 +119,7 @@ model Property {
 model LeaseAgreement {
   id                String             @id @default(auto()) @map("_id") @db.ObjectId
   terms             String
-  duration          Int
+  // duration          Int
   price             Float
   propertyId        String             @db.ObjectId
   property          Property           @relation(fields: [propertyId], references: [id])
@@ -134,12 +134,16 @@ model LeaseAgreement {
   paymentMethod     String?
   receipt           String? // URL to the receipt
   status            String?            @default("pending")
+  rejectionReason   String?
+  rejectionDate     DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
-  Agent             Agent?             @relation("AgentLeaseAgreement", fields: [agentId], references: [id])
+  agent             Agent?             @relation("AgentLeaseAgreement", fields: [agentId], references: [id])
   agentId           String?            @db.ObjectId
-  Reference         Reference?
-  EmploymentDetails EmploymentDetails?
+  isDeleted        Boolean?          @default(false)
+  deletedAt        DateTime?
+  references         Reference[]
+  employmentDetails EmploymentDetails?
 
   @@index([agentId], name: "agentId")
   @@index([propertyId], name: "propertyId")
@@ -170,7 +174,7 @@ model application {
   id         String    @id @default(auto()) @map("_id") @db.ObjectId
   User       User?     @relation(fields: [userId], references: [id])
   userId     String?   @db.ObjectId
-  status     status    @default(PENDING)
+  status     status    @default(pending)
   Property   Property? @relation(fields: [propertyId], references: [id])
   propertyId String?   @db.ObjectId
   createdAt  DateTime  @default(now())
@@ -178,9 +182,9 @@ model application {
 }
 
 enum status {
-  PENDING
-  APPROVED
-  REJECTED
+  pending
+  approved
+  rejected
 }
 
 model ManagementRequest {
@@ -191,7 +195,7 @@ model ManagementRequest {
   User        User     @relation(fields: [userId], references: [id])
   propertyId  String   @db.ObjectId
   property    Property @relation(fields: [propertyId], references: [id])
-  status      status   @default(PENDING)
+  status      status   @default(pending)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -6,7 +6,6 @@ exports.leaseValidationRules = [
     .notEmpty()
     .withMessage('Lease start date is required'),
   check('leaseEndDate').notEmpty().withMessage('Lease end date is required'),
-  check('userId').notEmpty().withMessage('user ID is required'),
 
   check('leaseAmount').notEmpty().withMessage('Lease amount is required'),
   check('paymentFrequency')
@@ -21,6 +20,9 @@ exports.leaseValidationRules = [
   check('otherIncomeSource')
     .notEmpty()
     .withMessage('Other income source is required'),
+  check('terms')
+    .notEmpty()
+    // .withMessage('Terms is required'),
 ];
 
 exports.validateLease = (req, res, next) => {

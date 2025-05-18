@@ -12,7 +12,6 @@ exports.check_api_key = (req, res, next) => {
     return res.status(401).json({ message: "api key not found" });
   }
   if (apiKey === process.env.ADMIN_API_KEY) {
-    console.log(req.user);
     req.user.role = "admin";
   } else if (apiKey === process.env.USER_API_KEY) {
     req.user.role = "user";

@@ -1,14 +1,23 @@
-const express = require('express');
-const leaseController = require('../controllers/leaseController');
-const authenticate = require('../middlewares/authenticate');
-const validateRequest = require('../middlewares/validateRequest');
-const { leaseValidationRules } = require('../validators/leaseValidator');
-const upload = require('../middlewares/multer');
+const express = require("express");
+const leaseController = require("../controllers/leaseController");
+const authenticate = require("../middlewares/authenticate");
+const validateRequest = require("../middlewares/validateRequest");
+const {
+  validateLease,
+  leaseValidationRules,
+} = require("../validators/leaseValidator");
+const upload = require("../middlewares/multer");
+
+const passport = require("passport");
+require("../utils/passport");
+const api_key = require("../middlewares/checkApiKey");
 
 const leaseRoute = express.Router();
 
+leaseRoute.use(api_key.check_api_key);
+
 leaseRoute.post(
-  '/',
+  "/",
   authenticate,
   leaseValidationRules,
   validateRequest,
@@ -16,42 +25,43 @@ leaseRoute.post(
 );
 
 // get all leases
-leaseRoute.get('/', authenticate, leaseController.getAllLeases);
+leaseRoute.get("/", authenticate, leaseController.getLeases);
 
-leaseRoute.get('/user', authenticate, leaseController.getLeasesForuser);
-
-leaseRoute.get('/:id', authenticate, leaseController.getSingleLease);
-
-// get lease for agent
-leaseRoute.get('/agent', authenticate, leaseController.getLeasesForagent);
+leaseRoute.get("/:id", authenticate, leaseController.getSingleLease);
 
 // upload rent receipt
-leaseRoute.patch('/upload-receipt/:id',   upload.single('receipt'),authenticate, leaseController.uploadReceipt);
+leaseRoute.patch(
+  "/upload-receipt/:id",
+  api_key.USER_KEY,
+  authenticate,
+  upload.single("receipt"),
+  leaseController.uploadReceipt
+);
 
 // update lease status
 leaseRoute.patch(
-  '/status/:id',
-  authenticate,
-  leaseController.updateLeaseStatus
+  "/status/:id",
+  api_key.ADMIN_KEY,
+  leaseController.changeLeaseStatus
 );
 
-// get lease for property
-leaseRoute.get(
-  '/property/:id',
-  authenticate,
-  leaseController.getLeasesForProperty
+// renew lease
+leaseRoute.patch(
+  "/renew/:id",
+  api_key.ADMIN_KEY,
+  leaseController.renewLease
 );
 
 // update lease
 leaseRoute.patch(
-  '/:id',
-  authenticate,
+  "/:id",
+  api_key.ADMIN_KEY || api_key.AGENT_KEY,
   leaseValidationRules,
   validateRequest,
   leaseController.updateLease
 );
 
 // delete lease
-leaseRoute.delete('/:id', authenticate, leaseController.deleteLease);
+leaseRoute.delete("/:id", api_key.ADMIN_KEY,authenticate, leaseController.deleteLease);
 
 module.exports = leaseRoute;

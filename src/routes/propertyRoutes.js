@@ -7,6 +7,8 @@ const { authorize } = require("../middlewares/authorize");
 const { propertyValidationRules } = require("../validators/propertyValidator");
 const validateRequest = require("../middlewares/validateRequest");
 
+const { adminStatusRateLimiter,propertyRateLimiter } = require("../utils/rateLimiter");
+
 // test this
 const passport = require("passport");
 require("../utils/passport");
@@ -22,6 +24,7 @@ propertyRoute.get(
   api_key.USER_KEY,
 
   // passport.authenticate("jwt", { session: false }),
+  propertyRateLimiter,
   propertyController.getProperties
 );
 propertyRoute.get(
@@ -60,12 +63,6 @@ propertyRoute.delete(
   propertyController.deleteProperty
 );
 
-const rateLimit = require("express-rate-limit");
-
-const adminStatusRateLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10, // limit each IP to 10 requests per windowMs
-});
 
 propertyRoute.patch(
   "/admin/:id/status",

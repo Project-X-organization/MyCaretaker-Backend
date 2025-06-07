@@ -15,8 +15,14 @@ const userRateLimiter = rateLimit({
   max: 30, // limit each IP to 30 requests per windowMs
 });
 
+const leaseRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 15, // limit each IP to 15 requests per windowMs
+});
+
 module.exports = {
   adminStatusRateLimiter,
   propertyRateLimiter,
   userRateLimiter,
+    leaseRateLimiter
 };

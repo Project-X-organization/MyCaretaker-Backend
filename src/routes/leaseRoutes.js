@@ -1,5 +1,5 @@
 const express = require("express");
-const rateLimit = require("express-rate-limit");
+const { leaseRateLimiter } = require("../utils/rateLimiter");
 const leaseController = require("../controllers/leaseController");
 const authenticate = require("../middlewares/authenticate");
 const validateRequest = require("../middlewares/validateRequest");
@@ -20,21 +20,28 @@ leaseRoute.use(api_key.check_api_key);
 leaseRoute.post(
   "/",
   authenticate,
+  leaseRateLimiter,
   leaseValidationRules,
   validateRequest,
   leaseController.createLease
 );
 
 // get all leases
-leaseRoute.get("/", authenticate, leaseController.getLeases);
+leaseRoute.get("/", authenticate, leaseRateLimiter, leaseController.getLeases);
 
-leaseRoute.get("/:id", authenticate, leaseController.getSingleLease);
+leaseRoute.get(
+  "/:id",
+  authenticate,
+  leaseRateLimiter,
+  leaseController.getSingleLease
+);
 
 // upload rent receipt
 leaseRoute.patch(
   "/upload-receipt/:id",
   api_key.USER_KEY,
   authenticate,
+  leaseRateLimiter,
   upload.single("receipt"),
   leaseController.uploadReceipt
 );
@@ -47,11 +54,7 @@ leaseRoute.patch(
 );
 
 // renew lease
-leaseRoute.patch(
-  "/renew/:id",
-  api_key.ADMIN_KEY,
-  leaseController.renewLease
-);
+leaseRoute.patch("/renew/:id", api_key.ADMIN_KEY, leaseController.renewLease);
 
 // update lease
 leaseRoute.patch(
@@ -62,12 +65,12 @@ leaseRoute.patch(
   leaseController.updateLease
 );
 
-// delete lease
-const deleteLeaseLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10, // max 10 requests per windowMs
-});
-
-leaseRoute.delete("/:id", deleteLeaseLimiter, api_key.ADMIN_KEY, authenticate, leaseController.deleteLease);
+leaseRoute.delete(
+  "/:id",
+  leaseRateLimiter,
+  api_key.ADMIN_KEY,
+  authenticate,
+  leaseController.deleteLease
+);
 
 module.exports = leaseRoute;

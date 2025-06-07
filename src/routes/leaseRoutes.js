@@ -1,4 +1,5 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 const leaseController = require("../controllers/leaseController");
 const authenticate = require("../middlewares/authenticate");
 const validateRequest = require("../middlewares/validateRequest");
@@ -62,6 +63,11 @@ leaseRoute.patch(
 );
 
 // delete lease
-leaseRoute.delete("/:id", api_key.ADMIN_KEY,authenticate, leaseController.deleteLease);
+const deleteLeaseLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // max 10 requests per windowMs
+});
+
+leaseRoute.delete("/:id", deleteLeaseLimiter, api_key.ADMIN_KEY, authenticate, leaseController.deleteLease);
 
 module.exports = leaseRoute;

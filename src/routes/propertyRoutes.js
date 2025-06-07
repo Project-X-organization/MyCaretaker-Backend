@@ -47,6 +47,7 @@ propertyRoute.post(
 
 propertyRoute.patch(
   "/:id",
+  propertyRateLimiter,
   authenticate,
   authorize("agent"),
   upload.array("images", 5),

@@ -177,6 +177,24 @@ exports.getProperty = async (req, res) => {
   }
 };
 
+// get property by id for cron job
+exports.getPropertyById = async (id) => {
+  try {
+    const property = await prisma.property.findUnique({
+      where: { id: id },
+    });
+
+    if (!property) {
+      return null;
+    }
+
+    return property;
+  } catch (error) {
+    console.error('Error retrieving property:', error);
+    return null;
+  }
+};
+
 exports.updateProperty = async (req, res) => {
   try {
     const { id } = req.params;

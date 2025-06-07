@@ -11,6 +11,8 @@ const cors = require("cors")
 // Load env variables
 dotenv.config();
 
+require("./cron/updateExpiredLease");
+
 const app = express();
 app.use(cors(
     {

@@ -58,6 +58,7 @@ propertyRoute.patch(
 
 propertyRoute.delete(
   "/:id",
+  adminStatusRateLimiter,
   authenticate,
   authorize("agent", "admin"),
   propertyController.deleteProperty

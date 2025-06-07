@@ -60,8 +60,16 @@ propertyRoute.delete(
   propertyController.deleteProperty
 );
 
+const rateLimit = require("express-rate-limit");
+
+const adminStatusRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // limit each IP to 10 requests per windowMs
+});
+
 propertyRoute.patch(
   "/admin/:id/status",
+  adminStatusRateLimiter,
   authenticate,
   authorize("admin"),
   propertyController.changePropertyStatus
